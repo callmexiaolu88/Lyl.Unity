@@ -1,0 +1,5 @@
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Util\bin\Debug\Lyl.Unity.Util.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Util\bin\Debug\Lyl.Unity.Util.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Util\obj\Debug\Lyl.Unity.Util.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Util\obj\Debug\Lyl.Unity.Util.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Util\obj\Debug\Lyl.Unity.Util.csprojResolveAssemblyReference.cache
