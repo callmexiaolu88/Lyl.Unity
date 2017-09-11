@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
@@ -94,7 +95,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
             throw new NotImplementedException();
         }
 
-        public System.ServiceModel.EndpointAddress LocalAddress
+        public EndpointAddress LocalAddress
         {
             get { throw new NotImplementedException(); }
         }

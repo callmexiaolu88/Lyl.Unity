@@ -6,59 +6,46 @@ using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 using Lyl.Unity.WcfExtensions.ChannelManagers;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
-    sealed class UdpOutputChannel : ExChannelBase, IOutputChannel
+    sealed class UdpOutputChannel : UdpBaseChannel, IOutputChannel
     {
-        private MessageEncoder _Encoder = null;
         private EndpointAddress _RemoteAddress = null;
         private Uri _Via = null;
+        private UdpChannelFactory _Factory;
 
-        public UdpOutputChannel(UdpChannelFactory factory, EndpointAddress remoteAddress, Uri via, MessageEncoder encoder)
-            : base(factory, null)
+        private IPAddress _IPAddress = null;
+
+        public UdpOutputChannel(UdpChannelFactory factory, EndpointAddress remoteAddress, Uri via,
+            BufferManager bufferManager, MessageEncoder encoder)
+            : base(factory, bufferManager, encoder)
         {
-            this._Encoder = encoder;
+            if (!string.Equals(via.Scheme, Constants.Scheme))
+            {
+                throw new ArgumentException(via.Scheme, "via");
+            }
+
+            this._Factory = factory;
             this._RemoteAddress = remoteAddress;
             this._Via = via;
-        }
 
-        protected override void OnAbort()
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnClose(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnEndClose(IAsyncResult result)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnEndOpen(IAsyncResult result)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override void OnOpen(TimeSpan timeout)
-        {
-            throw new NotImplementedException();
+            _IPAddress = IPAddress.Parse(via.Host);
         }
 
         #region IOutputChannel 成员
+
+        public EndpointAddress RemoteAddress
+        {
+            get { return _RemoteAddress; }
+        }
+
+        public Uri Via
+        {
+            get { return _Via; }
+        }
 
         public IAsyncResult BeginSend(Message message, TimeSpan timeout, AsyncCallback callback, object state)
         {
@@ -67,7 +54,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
         public IAsyncResult BeginSend(Message message, AsyncCallback callback, object state)
         {
-            throw new NotImplementedException();
+            return BeginSend(message, base.DefaultSendTimeout, callback, state);
         }
 
         public void EndSend(IAsyncResult result)
@@ -75,26 +62,41 @@ namespace Lyl.Unity.WcfExtensions.Channels
             throw new NotImplementedException();
         }
 
-        public System.ServiceModel.EndpointAddress RemoteAddress
-        {
-            get { return _RemoteAddress; }
-        }
-
         public void Send(Message message, TimeSpan timeout)
         {
-            throw new NotImplementedException();
+            base.SendMessage(message, timeout);
         }
 
         public void Send(Message message)
         {
-            throw new NotImplementedException();
-        }
-
-        public Uri Via
-        {
-            get { return _Via }
+            this.Send(message, base.DefaultSendTimeout);
         }
 
         #endregion
+
+        protected override void OnOpen(TimeSpan timeout)
+        {
+            this.connection();
+            base.OnOpen(timeout);
+        }
+
+        private void connection()
+        {
+            Socket socket = null;
+            int port = Via.Port;
+            if (port == -1)
+            {
+                port = 8000; // the default port for sized.tcp
+            }
+            IPHostEntry hostEntry = Dns.GetHostEntry(this.Via.Host);
+
+            if (hostEntry.AddressList.Length>0)
+            {
+                IPAddress address = hostEntry.AddressList.First();
+                socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket.Connect(new IPEndPoint(address, port));
+                base.InitializeScoket(socket);
+            }
+        }
     }
 }

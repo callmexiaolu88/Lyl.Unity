@@ -7,16 +7,21 @@ using System.ServiceModel.Channels;
 
 namespace Lyl.Unity.WcfExtensions.ChannelManagers
 {
-    class UdpChannelListener<TChannel> : ChannelListenerBase<TChannel> where TChannel : class
+    class UdpChannelListener : ChannelListenerBase<IInputChannel>
     {
-        private IChannelListener<TChannel> _InnerChannelListener;
+        private IChannelListener<IInputChannel> _InnerChannelListener;
 
         public UdpChannelListener(TransportBindingElement bindingElement, BindingContext context)
         {
-            _InnerChannelListener = context.BuildInnerChannelListener<TChannel>();
+            //           _BufferManager = BufferManager.CreateBufferManager(bindingElement.MaxBufferPoolSize, int.MaxValue);
+            //var me = context.BindingParameters.Find<MessageEncodingBindingElement>();
+            //if (me!=null)
+            //{
+            //    _MessageEncoderFactory = me.CreateMessageEncoderFactory();
+            //}
         }
 
-        protected override TChannel OnAcceptChannel(TimeSpan timeout)
+        protected override IInputChannel OnAcceptChannel(TimeSpan timeout)
         {
             var innerChannel = _InnerChannelListener.AcceptChannel(timeout);
             return null;
@@ -27,7 +32,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             throw new NotImplementedException();
         }
 
-        protected override TChannel OnEndAcceptChannel(IAsyncResult result)
+        protected override IInputChannel OnEndAcceptChannel(IAsyncResult result)
         {
             throw new NotImplementedException();
         }

@@ -41,6 +41,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncResult\DataAsyncResult.cs" />
+    <Compile Include="AsyncResult\DataCompleteAsyncResult.cs" />
+    <Compile Include="AsyncResult\ExAsyncResult.cs" />
+    <Compile Include="AsyncResult\CompletedAsyncResult.cs" />
+    <Compile Include="Collection\AsyncQueueReader.cs" />
+    <Compile Include="Collection\AsyncQueueWaiter.cs" />
+    <Compile Include="Collection\ExItem.cs" />
+    <Compile Include="Collection\ExItemQueue.cs" />
+    <Compile Include="Collection\ExQueue.cs" />
+    <Compile Include="Collection\IQueueReader.cs" />
+    <Compile Include="Collection\IQueueWaiter.cs" />
+    <Compile Include="Collection\WaitQueueReader.cs" />
+    <Compile Include="Collection\WaitQueueWaiter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceHostConfiguration\BatchingHostingSetting.cs" />
     <Compile Include="ServiceHostConfiguration\ServiceHostCollection.cs" />

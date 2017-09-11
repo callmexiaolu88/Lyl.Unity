@@ -45,7 +45,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         protected override IOutputChannel OnCreateChannel(EndpointAddress address, Uri via)
         {
-            return new UdpOutputChannel(this, address, via, _MessageEncoderFactory.Encoder);
+            return new UdpOutputChannel(this, address, via, this._BufferManager, _MessageEncoderFactory.Encoder);
         }
 
         protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
@@ -59,5 +59,11 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
         }
 
         protected override void OnOpen(TimeSpan timeout) { }
+
+        protected override void OnClosed()
+        {
+            base.OnClosed();
+            this._BufferManager.Clear();
+        }
     }
 }

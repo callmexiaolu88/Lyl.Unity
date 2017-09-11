@@ -26,7 +26,7 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
         {
             if (CanBuildChannelFactory<TChannel>(context))
             {
-                return new UdpChannelFactory<TChannel>(context);
+                return (IChannelFactory<TChannel>)new UdpChannelFactory(this, context);
             }
             return null;
         }
@@ -35,7 +35,7 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
         {
             if (CanBuildChannelListener<TChannel>(context))
             {
-                return new UdpChannelListener<TChannel>(context);
+                return (IChannelListener<TChannel>)new UdpChannelListener(this, context);
             }
             return null;
         }
@@ -57,12 +57,17 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
 
         public override T GetProperty<T>(BindingContext context)
         {
-            return context.GetInnerProperty<T>();
+            if (typeof(T) == typeof(MessageVersion))
+            {
+                return (T)(object)MessageVersion.None;
+            }
+
+            return base.GetProperty<T>(context);
         }
 
         public override string Scheme
         {
-            get { return "soap.udp"; }
+            get { return Constants.Scheme; }
         }
     }
 }

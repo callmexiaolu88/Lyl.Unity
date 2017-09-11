@@ -45,13 +45,28 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BindingElements\OneWayEncoderBindingElement.cs" />
     <Compile Include="BindingElements\UdpBindingElement.cs" />
     <Compile Include="ChannelManagers\UdpChannelFactory.cs" />
     <Compile Include="ChannelManagers\UdpChannelListener.cs" />
     <Compile Include="Channels\ExChannelBase.cs" />
+    <Compile Include="Channels\UdpBaseChannel.cs" />
     <Compile Include="Channels\UdpInputChannel.cs" />
     <Compile Include="Channels\UdpOutputChannel.cs" />
+    <Compile Include="Channels\UdpScoket\ComSocket.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Behavors\" />
+    <Folder Include="Formatters\" />
+    <Folder Include="Inspectors\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Lyl.Unity.Util\Lyl.Unity.Util.csproj">
+      <Project>{0b9779a1-58b7-4472-be99-a49b137288f7}</Project>
+      <Name>Lyl.Unity.Util</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

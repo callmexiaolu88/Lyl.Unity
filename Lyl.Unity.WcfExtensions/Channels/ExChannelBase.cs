@@ -4,6 +4,7 @@ using System.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net.Sockets;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
