@@ -104,7 +104,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         protected override IInputChannel OnAcceptChannel(TimeSpan timeout)
         {
-            var innerChannel = _InnerChannelListener.AcceptChannel(timeout);
+            //var innerChannel = _InnerChannelListener.AcceptChannel(timeout);
             return null;
         }
 
@@ -130,7 +130,6 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         #endregion Protected Base Class Method
 
-        
         #region Private  Method
         
         private void initializeUri(BindingContext context)
@@ -236,6 +235,49 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
                 _Sockets[i].Close((int)timeout.TotalMilliseconds);
             }
             _Sockets.Clear();
+        }
+
+        private bool createOrRetrieveChannel(out UdpInputChannel channel)
+        {
+            bool createChannel = false;
+            channel = _CurrentChannel;
+            if (channel==null)
+            {
+                lock (_CurrentChannel)
+                {
+                    channel = _CurrentChannel;
+                    if (channel == null)
+                    {
+                        channel = new UdpInputChannel(this, null);
+                        channel.Closed += onChannelClosed;
+                        _CurrentChannel = channel;
+                        createChannel = true;
+                    }
+                }
+            }
+            return createChannel;
+        }
+
+        private void ensureChannelAvailable()
+        {
+            UdpInputChannel channel;
+            var createChannel=createOrRetrieveChannel(out channel);
+            if (createChannel)
+            {
+                _ChannelQueue.EnqueueAndDispatch(channel);
+            }
+        }
+
+        private void onChannelClosed(object sender, EventArgs e)
+        {
+            UdpInputChannel channel = (UdpInputChannel)sender;
+            lock (_CurrentChannel)
+            {
+                if (_CurrentChannel==channel)
+                {
+                    _CurrentChannel = null;
+                }
+            }
         }
 
         #endregion Private  Method
