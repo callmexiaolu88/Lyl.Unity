@@ -6,6 +6,7 @@ using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 using Lyl.Unity.Util;
+using Lyl.Unity.Util.AsyncResult;
 using Lyl.Unity.WcfExtensions.Channels;
 
 namespace Lyl.Unity.WcfExtensions.ChannelManagers
@@ -65,5 +66,6 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             base.OnClosed();
             this._BufferManager.Clear();
         }
+
     }
 }

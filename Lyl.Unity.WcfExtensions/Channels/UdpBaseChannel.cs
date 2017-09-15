@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.ServiceModel.Channels;
 using Lyl.Unity.Util;
 using Lyl.Unity.Util.AsyncResult;
+using System.ServiceModel;
+using System.Net;
+using System.Globalization;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
@@ -81,23 +84,22 @@ namespace Lyl.Unity.WcfExtensions.Channels
             CompletedAsyncResult.End(result);
         }
 
-        protected override void OnOpen(TimeSpan timeout)
-        {
-
-        }
-
         #endregion ExChannelBase
 
         #region Protected Method
-        
-        protected void SendMessage(Message message,TimeSpan timeout)
+
+        protected void SendMessage(Message message, IPEndPoint remoteEndpoint)
         {
             base.ThrowIfDisposedOrNotOpen();
-            ArraySegment<byte> encodeBytes = default(ArraySegment<byte>);
+            ArraySegment<byte> encodeBytes = this.encodeMessage(message);
             try
             {
-                encodeBytes = this.encodeMessage(message);
-                this.writeData(encodeBytes);
+                var bytesSent = this._Socket.SendTo(encodeBytes.Array, encodeBytes.Offset, encodeBytes.Count, SocketFlags.None, remoteEndpoint);
+                if (bytesSent != encodeBytes.Count)
+                {
+                    throw new CommunicationException(string.Format(CultureInfo.CurrentCulture,
+                        "A Udp error occurred sending a message to {0}.", remoteEndpoint));
+                }
             }
             catch (System.Exception ex)
             {
@@ -105,11 +107,29 @@ namespace Lyl.Unity.WcfExtensions.Channels
             }
             finally
             {
-                if (encodeBytes.Array!=null)
-                {
-                    this._BuffManager.ReturnBuffer(encodeBytes.Array);
-                }
+                this._BuffManager.ReturnBuffer(encodeBytes.Array);
             }
+        }
+
+        protected IAsyncResult BeginSendMessage(Message message, out ArraySegment<byte> messageBuff, IPEndPoint remoteEndpoint,AsyncCallback callback, object state)
+        {
+            IAsyncResult result;
+            try
+            {
+                messageBuff = this.encodeMessage(message);
+                result = this._Socket.BeginSendTo(messageBuff.Array, messageBuff.Offset, messageBuff.Count,
+                    SocketFlags.None, remoteEndpoint, callback, state);
+                return result;
+            }
+            catch (System.Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        protected int EndSendMessage(IAsyncResult result)
+        {
+            return this._Socket.EndSendTo(result);
         }
 
         protected Message ReceiveMessage(TimeSpan timeout)
@@ -126,6 +146,15 @@ namespace Lyl.Unity.WcfExtensions.Channels
                 
                 throw ex;
             }
+        }
+
+        protected void ClearupBuffer(byte[] buffer)
+        {
+            if (buffer != null)
+            {
+                this._BuffManager.ReturnBuffer(buffer);
+            }
+
         }
 
         #endregion Protected Method

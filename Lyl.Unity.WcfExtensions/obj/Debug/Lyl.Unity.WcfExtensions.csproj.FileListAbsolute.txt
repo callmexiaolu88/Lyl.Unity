@@ -1,1 +1,7 @@
 E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\obj\Debug\Lyl.Unity.WcfExtensions.csprojResolveAssemblyReference.cache
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\bin\Debug\Lyl.Unity.WcfExtensions.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\bin\Debug\Lyl.Unity.WcfExtensions.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\bin\Debug\Lyl.Unity.Util.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\bin\Debug\Lyl.Unity.Util.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\obj\Debug\Lyl.Unity.WcfExtensions.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.WcfExtensions\obj\Debug\Lyl.Unity.WcfExtensions.pdb

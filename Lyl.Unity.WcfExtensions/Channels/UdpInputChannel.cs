@@ -6,11 +6,14 @@ using System.ServiceModel.Channels;
 using System.Text;
 using System.Threading.Tasks;
 using Lyl.Unity.WcfExtensions.Channels;
+using Lyl.Unity.Util.Collection;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
     sealed class UdpInputChannel : ExChannelBase, IInputChannel
     {
+        ExQueue<Message> _MessageQueue;
+        MessageEncoder _MessageEncoder;
         
         #region 构造函数
         
@@ -19,13 +22,18 @@ namespace Lyl.Unity.WcfExtensions.Channels
         /// </summary>
         /// <param name="channelManager">信道管理器</param>
         /// <param name="innerChannel">内部信道</param>
-        public UdpInputChannel(ChannelManagerBase channelManager, ChannelBase innerChannel) : base(channelManager, innerChannel) { }
+        public UdpInputChannel(ChannelManagerBase channelManager, ChannelBase innerChannel)
+            : base(channelManager, innerChannel)
+        {
+            _MessageQueue = new ExQueue<Message>();
+            //_MessageEncoder=
+        }
 
         #endregion 构造函数
 
         protected override void OnAbort()
         {
-            throw new NotImplementedException();
+            _MessageQueue.Close();
         }
 
         protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)

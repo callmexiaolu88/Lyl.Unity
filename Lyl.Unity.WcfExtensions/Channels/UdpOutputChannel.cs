@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Lyl.Unity.WcfExtensions.ChannelManagers;
 using System.Net;
 using System.Net.Sockets;
+using Lyl.Unity.Util.AsyncResult;
+using System.Globalization;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
@@ -18,6 +20,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
         private UdpChannelFactory _Factory;
 
         private IPAddress _IPAddress = null;
+        private IPEndPoint _RemoteEndPoint = null;
 
         public UdpOutputChannel(UdpChannelFactory factory, EndpointAddress remoteAddress, Uri via,
             BufferManager bufferManager, MessageEncoder encoder)
@@ -33,6 +36,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
             this._Via = via;
 
             _IPAddress = IPAddress.Parse(via.Host);
+            _RemoteEndPoint = new IPEndPoint(_IPAddress, via.Port);            
         }
 
         #region IOutputChannel 成员
@@ -49,27 +53,28 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
         public IAsyncResult BeginSend(Message message, TimeSpan timeout, AsyncCallback callback, object state)
         {
-            throw new NotImplementedException();
+            return BeginSend(message, callback, state);
         }
 
         public IAsyncResult BeginSend(Message message, AsyncCallback callback, object state)
         {
-            return BeginSend(message, base.DefaultSendTimeout, callback, state);
+            base.ThrowIfDisposedOrNotOpen();
+            return new SendAsyncResult(this, message, callback, state);
         }
 
         public void EndSend(IAsyncResult result)
         {
-            throw new NotImplementedException();
+            SendAsyncResult.End(result);
         }
 
         public void Send(Message message, TimeSpan timeout)
         {
-            base.SendMessage(message, timeout);
+            this.Send(message);
         }
 
         public void Send(Message message)
         {
-            this.Send(message, base.DefaultSendTimeout);
+            this.SendMessage(message, this._RemoteEndPoint);
         }
 
         #endregion
@@ -77,7 +82,6 @@ namespace Lyl.Unity.WcfExtensions.Channels
         protected override void OnOpen(TimeSpan timeout)
         {
             this.connection();
-            base.OnOpen(timeout);
         }
 
         private void connection()
@@ -93,10 +97,93 @@ namespace Lyl.Unity.WcfExtensions.Channels
             if (hostEntry.AddressList.Length>0)
             {
                 IPAddress address = hostEntry.AddressList.First();
-                socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+                socket = new Socket(address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
                 socket.Connect(new IPEndPoint(address, port));
                 base.InitializeScoket(socket);
             }
         }
+
+        #region SendAsyncResult
+
+        class SendAsyncResult : ExAsyncResult
+        {
+            ArraySegment<byte> messageBuff;
+            UdpOutputChannel channel;
+
+            public SendAsyncResult(UdpOutputChannel channel,Message message, AsyncCallback callback, object state)
+                : base(callback, state)
+            {
+                this.channel = channel;
+                try
+                {
+                    var result = channel.BeginSendMessage(message, out messageBuff, channel._RemoteEndPoint, onSendCallback, this);
+                    if (result.CompletedSynchronously)
+                    {
+                        completeSend(result, true);
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    clearupBuffer();
+                    throw ex;
+                }
+                
+            }
+
+            public static void End(IAsyncResult result)
+            {
+                ExAsyncResult.End<SendAsyncResult>(result);
+            }
+
+            private void onSendCallback(IAsyncResult result)
+            {
+                if (result.CompletedSynchronously)
+                {
+                    return;
+                }
+                try
+                {
+                    completeSend(result, false);
+                }
+                catch (System.Exception ex)
+                {
+                    Complete(false, ex);
+                }
+            }
+
+            private void completeSend(IAsyncResult result,bool completedSynchronously)
+            {
+                try
+                {
+                    int bytesSent = channel.EndSendMessage(result);
+                    if (bytesSent!=messageBuff.Count)
+                    {
+                        throw new CommunicationException(string.Format(CultureInfo.CurrentCulture,
+                           "A Udp error occurred sending a message to {0}.", channel._RemoteEndPoint));
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    throw ex;
+                }
+                finally
+                {
+                    clearupBuffer();
+                }
+                Complete(completedSynchronously);
+            }
+
+            private void clearupBuffer()
+            {
+                if (messageBuff.Array != null)
+                {
+                    channel.ClearupBuffer(messageBuff.Array);
+                    messageBuff = new ArraySegment<byte>();
+                }
+            }
+        }
+
+        #endregion SendAsyncResult
+
     }
 }
