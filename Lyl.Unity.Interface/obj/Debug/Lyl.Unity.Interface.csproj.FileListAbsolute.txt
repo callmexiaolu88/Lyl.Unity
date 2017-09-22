@@ -1,0 +1,4 @@
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Interface\bin\Debug\Lyl.Unity.Interface.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Interface\bin\Debug\Lyl.Unity.Interface.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Interface\obj\Debug\Lyl.Unity.Interface.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Interface\obj\Debug\Lyl.Unity.Interface.pdb

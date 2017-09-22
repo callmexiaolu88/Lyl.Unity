@@ -8,15 +8,15 @@ using Lyl.Unity.WcfExtensions.ChannelManagers;
 
 namespace Lyl.Unity.WcfExtensions.BindingElements
 {
-    public class UdpBindingElement : TransportBindingElement
+    public class ExUdpBindingElement : TransportBindingElement
     {
 
-        public UdpBindingElement()
+        public ExUdpBindingElement()
         {
 
         }
 
-        public UdpBindingElement(TransportBindingElement elementToBeCloned)
+        public ExUdpBindingElement(TransportBindingElement elementToBeCloned)
             : base(elementToBeCloned)
         {
 
@@ -52,7 +52,7 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
 
         public override BindingElement Clone()
         {
-            return new UdpBindingElement(this);
+            return new ExUdpBindingElement(this);
         }
 
         public override T GetProperty<T>(BindingContext context)
@@ -67,7 +67,7 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
 
         public override string Scheme
         {
-            get { return Constants.Scheme; }
+            get { return ExStringConstants.Scheme; }
         }
     }
 }

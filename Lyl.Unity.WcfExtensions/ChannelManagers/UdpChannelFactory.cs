@@ -14,18 +14,28 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
     class UdpChannelFactory : ChannelFactoryBase<IOutputChannel>
     {
 
+        #region Private Filed
+        
         private BufferManager _BufferManager = null;
         private MessageEncoderFactory _MessageEncoderFactory = null;
 
+        #endregion Private Filed
+
+        #region Constructor
+        
         public UdpChannelFactory(TransportBindingElement bindingElement, BindingContext context)
         {
-            _BufferManager = BufferManager.CreateBufferManager(bindingElement.MaxBufferPoolSize, int.MaxValue);
+            _BufferManager = BufferManager.CreateBufferManager(bindingElement.MaxBufferPoolSize, ExDefaultValue.MaxBufferSize);
             var me = context.BindingParameters.Find<MessageEncodingBindingElement>();
             if (me!=null)
             {
                 _MessageEncoderFactory = me.CreateMessageEncoderFactory();
             }
         }
+
+        #endregion Constructor
+
+        #region Public Base Class Method
 
         public override T GetProperty<T>()
         {
@@ -43,6 +53,10 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             }
             return result;
         }
+
+        #endregion Public Base Class Method
+
+        #region Protect Base Class Method
 
         protected override IOutputChannel OnCreateChannel(EndpointAddress address, Uri via)
         {
@@ -66,6 +80,8 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             base.OnClosed();
             this._BufferManager.Clear();
         }
+
+        #endregion Protect Base Class Method
 
     }
 }

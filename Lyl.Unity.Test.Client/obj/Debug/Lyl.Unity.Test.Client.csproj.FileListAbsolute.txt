@@ -1,0 +1,12 @@
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Test.Client.exe.config
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Test.Client.exe
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Test.Client.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Interface.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.WcfExtensions.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Util.dll
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Interface.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.WcfExtensions.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\bin\Debug\Lyl.Unity.Util.pdb
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\obj\Debug\Lyl.Unity.Test.Client.csprojResolveAssemblyReference.cache
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\obj\Debug\Lyl.Unity.Test.Client.exe
+E:\GitRepositories\Lyl.Unity\Lyl.Unity.Test.Client\obj\Debug\Lyl.Unity.Test.Client.pdb

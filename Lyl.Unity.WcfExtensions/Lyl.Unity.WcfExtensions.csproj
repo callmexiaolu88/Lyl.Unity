@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization" />
@@ -45,8 +46,11 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BindingConfigurationElements\ExUdpBindingCollectionElement.cs" />
+    <Compile Include="BindingConfigurationElements\ExUdpBindingConfigurationElement.cs" />
     <Compile Include="BindingElements\OneWayEncoderBindingElement.cs" />
-    <Compile Include="BindingElements\UdpBindingElement.cs" />
+    <Compile Include="BindingElements\ExUdpBindingElement.cs" />
+    <Compile Include="Bindings\ExUdpBinding.cs" />
     <Compile Include="ChannelManagers\UdpChannelFactory.cs" />
     <Compile Include="ChannelManagers\UdpChannelListener.cs" />
     <Compile Include="Channels\ExChannelBase.cs" />
@@ -54,7 +58,11 @@
     <Compile Include="Channels\UdpInputChannel.cs" />
     <Compile Include="Channels\UdpOutputChannel.cs" />
     <Compile Include="Channels\UdpScoket\ComSocket.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="ExDefaultValue.cs" />
+    <Compile Include="ExStringConstants.cs" />
+    <Compile Include="ExtentionHelper.cs" />
+    <Compile Include="MessageEncoders\OneWayMessageEncoder.cs" />
+    <Compile Include="MessageEncoders\OneWayMessageEncoderFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

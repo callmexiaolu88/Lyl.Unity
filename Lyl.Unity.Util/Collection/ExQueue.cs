@@ -414,6 +414,56 @@ namespace Lyl.Unity.Util.Collection
             return enqueueWithoutDispatch(new ExItem<T>(exception, dequeuedCallback));
         }
 
+        public bool WaitForItem(TimeSpan timeout)
+        {
+            WaitQueueWaiter waiter = null;
+            bool itemAvailable = false;
+            lock (LockObject)
+            {
+                if (_QueueState==QueueState.Open)
+                {
+                    if (_ItemQueue.HasAvailableItem)
+                    {
+                        itemAvailable = true;
+                    }
+                    else
+                    {
+                        waiter = new WaitQueueWaiter();
+                        _WaiterList.Add(waiter);
+                    }
+                }
+                else if (_QueueState==QueueState.Shutdown)
+                {
+                    if (_ItemQueue.HasAvailableItem)
+                    {
+                        itemAvailable = true;
+                    }
+                    else if(_ItemQueue.HasAnyItem)
+                    {
+                        waiter = new WaitQueueWaiter();
+                        _WaiterList.Add(waiter);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (waiter!=null)
+            {
+                return waiter.Wait(timeout);
+            }
+            else
+            {
+                return itemAvailable;
+            }
+        }
+
         public void Dispatch()
         {
             IQueueReader<T> reader = null;

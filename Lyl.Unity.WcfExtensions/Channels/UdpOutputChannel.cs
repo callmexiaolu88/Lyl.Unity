@@ -15,6 +15,9 @@ namespace Lyl.Unity.WcfExtensions.Channels
 {
     sealed class UdpOutputChannel : UdpBaseChannel, IOutputChannel
     {
+
+        #region Private Filed
+
         private EndpointAddress _RemoteAddress = null;
         private Uri _Via = null;
         private UdpChannelFactory _Factory;
@@ -22,11 +25,15 @@ namespace Lyl.Unity.WcfExtensions.Channels
         private IPAddress _IPAddress = null;
         private IPEndPoint _RemoteEndPoint = null;
 
+        #endregion Private Filed
+
+        #region Constructor
+
         public UdpOutputChannel(UdpChannelFactory factory, EndpointAddress remoteAddress, Uri via,
             BufferManager bufferManager, MessageEncoder encoder)
             : base(factory, bufferManager, encoder)
         {
-            if (!string.Equals(via.Scheme, Constants.Scheme))
+            if (!string.Equals(via.Scheme, ExStringConstants.Scheme))
             {
                 throw new ArgumentException(via.Scheme, "via");
             }
@@ -38,6 +45,8 @@ namespace Lyl.Unity.WcfExtensions.Channels
             _IPAddress = IPAddress.Parse(via.Host);
             _RemoteEndPoint = new IPEndPoint(_IPAddress, via.Port);            
         }
+        
+        #endregion 
 
         #region IOutputChannel 成员
 
@@ -77,46 +86,49 @@ namespace Lyl.Unity.WcfExtensions.Channels
             this.SendMessage(message, this._RemoteEndPoint);
         }
 
-        #endregion
+        #endregion IOutputChannel 成员
+
+        #region Protect Base Class Method
 
         protected override void OnOpen(TimeSpan timeout)
         {
             this.connection();
         }
 
+        #endregion Protect Base Class Method
+
+        #region Private Method
+
         private void connection()
         {
             Socket socket = null;
-            int port = Via.Port;
-            if (port == -1)
-            {
-                port = 8000; // the default port for sized.tcp
-            }
-            IPHostEntry hostEntry = Dns.GetHostEntry(this.Via.Host);
-
-            if (hostEntry.AddressList.Length>0)
-            {
-                IPAddress address = hostEntry.AddressList.First();
-                socket = new Socket(address.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-                socket.Connect(new IPEndPoint(address, port));
-                base.InitializeScoket(socket);
-            }
+            socket = new Socket(_RemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
+            base.InitializeScoket(socket);
         }
 
-        #region SendAsyncResult
+        #endregion Private Method
+
+        #region SendAsyncResult Class
 
         class SendAsyncResult : ExAsyncResult
         {
-            ArraySegment<byte> messageBuff;
-            UdpOutputChannel channel;
 
-            public SendAsyncResult(UdpOutputChannel channel,Message message, AsyncCallback callback, object state)
+            #region Private Filed
+
+            private ArraySegment<byte> _MessageBuff;
+            private UdpOutputChannel _Channel;
+
+            #endregion Private Filed
+
+            #region Constructor
+
+            public SendAsyncResult(UdpOutputChannel channel, Message message, AsyncCallback callback, object state)
                 : base(callback, state)
             {
-                this.channel = channel;
+                this._Channel = channel;
                 try
                 {
-                    var result = channel.BeginSendMessage(message, out messageBuff, channel._RemoteEndPoint, onSendCallback, this);
+                    var result = channel.BeginSendMessage(message, out _MessageBuff, channel._RemoteEndPoint, onSendCallback, this);
                     if (result.CompletedSynchronously)
                     {
                         completeSend(result, true);
@@ -130,10 +142,18 @@ namespace Lyl.Unity.WcfExtensions.Channels
                 
             }
 
+            #endregion Constructor
+
+            #region Public Static Method
+            
             public static void End(IAsyncResult result)
             {
                 ExAsyncResult.End<SendAsyncResult>(result);
             }
+
+            #endregion Public Static Method
+
+            #region Private Method
 
             private void onSendCallback(IAsyncResult result)
             {
@@ -155,11 +175,11 @@ namespace Lyl.Unity.WcfExtensions.Channels
             {
                 try
                 {
-                    int bytesSent = channel.EndSendMessage(result);
-                    if (bytesSent!=messageBuff.Count)
+                    int bytesSent = _Channel.EndSendMessage(result);
+                    if (bytesSent!=_MessageBuff.Count)
                     {
                         throw new CommunicationException(string.Format(CultureInfo.CurrentCulture,
-                           "A Udp error occurred sending a message to {0}.", channel._RemoteEndPoint));
+                           "A Udp error occurred sending a message to {0}.", _Channel._RemoteEndPoint));
                     }
                 }
                 catch (System.Exception ex)
@@ -175,15 +195,18 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
             private void clearupBuffer()
             {
-                if (messageBuff.Array != null)
+                if (_MessageBuff.Array != null)
                 {
-                    channel.ClearupBuffer(messageBuff.Array);
-                    messageBuff = new ArraySegment<byte>();
+                    _Channel.ClearupBuffer(_MessageBuff.Array);
+                    _MessageBuff = new ArraySegment<byte>();
                 }
             }
+
+            #endregion Private Method
+
         }
 
-        #endregion SendAsyncResult
+        #endregion SendAsyncResult Class
 
     }
 }

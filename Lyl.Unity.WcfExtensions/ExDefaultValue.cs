@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Lyl.Unity.WcfExtensions
 {
-    static class Constants
+    class ExDefaultValue
     {
-        internal const string Scheme = "fitsco.udp";
+        public const int MaxBufferSize = 64 * 1024;
     }
 }

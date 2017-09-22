@@ -18,7 +18,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
         
         #region Private Filed
         
-        private const int maxBufferSize = 64 * 1024;
+        private const int _MaxBufferSize = 64 * 1024;
         private Socket _Socket;
         private BufferManager _BuffManager;
         private MessageEncoder _MessageEncoder;
@@ -40,7 +40,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
         protected void InitializeScoket(Socket socket)
         {
-            if (this._Socket != null)
+            if (this._Socket == null)
             {
                 this._Socket = socket;
             }
@@ -165,7 +165,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
         {
             try
             {
-                return this._MessageEncoder.WriteMessage(message, maxBufferSize, this._BuffManager);
+                return this._MessageEncoder.WriteMessage(message, _MaxBufferSize, this._BuffManager);
             }
             finally
             {
@@ -214,7 +214,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
         {
             try
             {
-                byte[] buffer=this._BuffManager.TakeBuffer(maxBufferSize);
+                byte[] buffer=this._BuffManager.TakeBuffer(_MaxBufferSize);
                 int length=this._Socket.Receive(buffer);
                 var result = new ArraySegment<byte>(buffer, 0, length);
                 this._BuffManager.ReturnBuffer(buffer);
