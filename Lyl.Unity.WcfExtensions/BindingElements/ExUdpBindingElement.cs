@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.ServiceModel.Channels;
 using System.Text;
@@ -11,6 +12,8 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
     public class ExUdpBindingElement : TransportBindingElement
     {
 
+        #region Constructor
+        
         public ExUdpBindingElement()
         {
 
@@ -22,22 +25,41 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
 
         }
 
+        #endregion Constructor
+        
+        #region Public Base Class Property
+        
+        public override string Scheme
+        {
+            get { return ExStringConstants.Scheme; }
+        }
+
+        #endregion Public Base Class Property
+
+        #region Public Base Class Method
+
         public override IChannelFactory<TChannel> BuildChannelFactory<TChannel>(BindingContext context)
         {
-            if (CanBuildChannelFactory<TChannel>(context))
+            if (context == null)
             {
-                return (IChannelFactory<TChannel>)new UdpChannelFactory(this, context);
+                throw new ArgumentNullException("context");
             }
-            return null;
+            return (IChannelFactory<TChannel>)(object)new UdpChannelFactory(this, context);
         }
 
         public override IChannelListener<TChannel> BuildChannelListener<TChannel>(BindingContext context)
         {
-            if (CanBuildChannelListener<TChannel>(context))
+            if (context == null)
             {
-                return (IChannelListener<TChannel>)new UdpChannelListener(this, context);
+                throw new ArgumentNullException("context");
             }
-            return null;
+
+            if (!this.CanBuildChannelListener<TChannel>(context))
+            {
+                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, "Unsupported channel type: {0}.", typeof(TChannel).Name));
+            }
+
+            return (IChannelListener<TChannel>)(object)new UdpChannelListener(this, context);
         }
 
         public override bool CanBuildChannelFactory<TChannel>(BindingContext context)
@@ -57,17 +79,15 @@ namespace Lyl.Unity.WcfExtensions.BindingElements
 
         public override T GetProperty<T>(BindingContext context)
         {
-            if (typeof(T) == typeof(MessageVersion))
+            if (context == null)
             {
-                return (T)(object)MessageVersion.None;
+                throw new ArgumentNullException("context");
             }
 
-            return base.GetProperty<T>(context);
+            return context.GetInnerProperty<T>();
         }
 
-        public override string Scheme
-        {
-            get { return ExStringConstants.Scheme; }
-        }
+        #endregion Public Base Class Method
+
     }
 }

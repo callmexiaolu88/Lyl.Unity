@@ -228,5 +228,10 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
         #endregion Private Method
 
+
+        protected override void OnOpen(TimeSpan timeout)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ServiceModel.Channels;
+using System.Net;
 using System.Net.Sockets;
+using System.ServiceModel;
+using System.ServiceModel.Channels;
+using System.ServiceModel.Description;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Lyl.Unity.Util.AsyncResult;
 using Lyl.Unity.Util.Collection;
 using Lyl.Unity.WcfExtensions.Channels;
-using System.ServiceModel.Description;
-using System.Net;
-using System.Globalization;
-using Lyl.Unity.Util.AsyncResult;
-using System.Threading;
-using System.Diagnostics;
-using System.ServiceModel;
 
 namespace Lyl.Unity.WcfExtensions.ChannelManagers
 {
@@ -28,7 +29,6 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
         private ExQueue<IInputChannel> _ChannelQueue;
         private UdpInputChannel _CurrentChannel;
         private object _CurrentChannelLockObject;
-        private object _LockObject;
         private Uri _Uri;
         private AsyncCallback _OnSocketReceive;
 
@@ -38,8 +38,6 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         public UdpChannelListener(TransportBindingElement bindingElement, BindingContext context)
         {
-            _CurrentChannelLockObject = new object();
-            _LockObject = base.ThisLock;
             _BufferManager = BufferManager.CreateBufferManager(bindingElement.MaxBufferPoolSize, ExDefaultValue.MaxBufferSize);
             var me = context.BindingParameters.Find<MessageEncodingBindingElement>();
             if (me != null)
@@ -48,7 +46,8 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             }
 
             _ChannelQueue = new ExQueue<IInputChannel>();
-            _Sockets = new List<Socket>();
+            _CurrentChannelLockObject = new object();
+            _Sockets = new List<Socket>(2);
             initializeUri(context);
         }
 
@@ -160,7 +159,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         protected override void OnAbort()
         {
-            lock (_LockObject)
+            lock (ThisLock)
             {
                 closeListenSockets(TimeSpan.Zero);
                 _ChannelQueue.Close();
@@ -169,7 +168,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         protected override void OnClose(TimeSpan timeout)
         {
-            lock (_LockObject)
+            lock (ThisLock)
             {
                 closeListenSockets(TimeSpan.Zero);
                 _ChannelQueue.Close();
@@ -226,8 +225,28 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
 
         #endregion Protected Base Class Method
 
+        #region Public Base Class Method
+
+        public override T GetProperty<T>()
+        {
+            T messageEncoderProperty = this.MessageEncoderFactory.Encoder.GetProperty<T>();
+            if (messageEncoderProperty != null)
+            {
+                return messageEncoderProperty;
+            }
+
+            if (typeof(T) == typeof(MessageVersion))
+            {
+                return (T)(object)this.MessageEncoderFactory.Encoder.MessageVersion;
+            }
+
+            return base.GetProperty<T>();
+        }
+
+        #endregion Public Base Class Method
+
         #region Private  Method
-        
+
         private void initializeUri(BindingContext context)
         {
             Uri baseAddressUri = context.ListenUriBaseAddress;
@@ -284,7 +303,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
                 fullUri = new Uri(baseAddress, relativeAddress);
             }
 
-            lock (_LockObject)
+            lock (ThisLock)
             {
                 ThrowIfDisposedOrImmutable();
                 this._Uri = fullUri;
@@ -297,7 +316,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             if (baseAddressUri==null)
                 throw new ArgumentNullException("baseAddressUri");
             int port;
-            lock (_LockObject)
+            lock (ThisLock)
             {
                 closeListenSockets(TimeSpan.Zero);
                 IPAddress ipAddress = null;
@@ -344,7 +363,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
                     channel = _CurrentChannel;
                     if (channel == null)
                     {
-                        channel = new UdpInputChannel(this, null);
+                        channel = new UdpInputChannel(this);
                         channel.Closed += onChannelClosed;
                         _CurrentChannel = channel;
                         createChannel = true;
@@ -394,7 +413,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             IAsyncResult result = null;
             try
             {
-                lock (_LockObject)
+                lock (ThisLock)
                 {
                     if (base.State == CommunicationState.Opened)
                     {
@@ -439,7 +458,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
                     receiveResult = null;
                 }
 
-                lock (_LockObject)
+                lock (ThisLock)
                 {
                     if (base.State==CommunicationState.Opened)
                     {
@@ -505,7 +524,7 @@ namespace Lyl.Unity.WcfExtensions.ChannelManagers
             try
             {
                 int count = 0;
-                lock (_LockObject)
+                lock (ThisLock)
                 {
                     if (base.State == CommunicationState.Opened)
                     {

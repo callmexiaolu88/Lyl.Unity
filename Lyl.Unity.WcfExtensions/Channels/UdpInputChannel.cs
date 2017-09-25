@@ -12,7 +12,7 @@ using Lyl.Unity.Util.AsyncResult;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
-    sealed class UdpInputChannel : ExChannelBase, IInputChannel
+    sealed class UdpInputChannel : ChannelBase, IInputChannel
     {
 
         #region Private Filed
@@ -29,8 +29,8 @@ namespace Lyl.Unity.WcfExtensions.Channels
         /// </summary>
         /// <param name="channelManager">信道管理器</param>
         /// <param name="innerChannel">内部信道</param>
-        public UdpInputChannel(UdpChannelListener channelManager, ChannelBase innerChannel)
-            : base(channelManager, innerChannel)
+        public UdpInputChannel(UdpChannelListener channelManager)
+            : base(channelManager)
         {
             _MessageQueue = new ExQueue<Message>();
             _Encoder = channelManager.MessageEncoderFactory.Encoder;

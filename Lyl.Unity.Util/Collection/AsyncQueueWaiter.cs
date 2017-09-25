@@ -62,9 +62,10 @@ namespace Lyl.Unity.Util.Collection
         public void Set(bool itemAvailable)
         {
             bool timely = false;
-            if (_Timer == null || _Timer.Change(-1, -1))
+            lock (_LockObject)
             {
-                timely = true;
+                if (_Timer == null || _Timer.Change(-1, -1))
+                    timely = true;
                 this._ItemAvailable = itemAvailable;
             }
             if (timely)

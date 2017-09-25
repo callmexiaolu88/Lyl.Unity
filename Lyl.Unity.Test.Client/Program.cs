@@ -12,11 +12,12 @@ namespace Lyl.Unity.Test.Client
     {
         static void Main(string[] args)
         {
-            var factory = new ChannelFactory<ITestCommunication>("TestCommunication");
+            var factory = new ChannelFactory<ITestCommunication>("SampleProfileUdpBinding_ICalculatorContract");
             var channel = factory.CreateChannel();
             var result=channel.Add(1, 1);
             Console.WriteLine(result);
-            Console.Read();
+            Console.Out.WriteLine("Press <ENTER> to complete test.");
+            Console.In.ReadLine();
         }
     }
 }

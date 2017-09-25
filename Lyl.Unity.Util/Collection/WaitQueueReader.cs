@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Lyl.Unity.Util.Collection
 {
@@ -39,6 +40,9 @@ namespace Lyl.Unity.Util.Collection
         {
             lock (_LockObject)
             {
+                Debug.Assert(this._Item == null, "InputQueue.WaitQueueReader.Set: (this.item == null)");
+                Debug.Assert(this._Exception == null, "InputQueue.WaitQueueReader.Set: (this.exception == null)");
+
                 this._Exception = item.Exception;
                 this._Item = item.Data;
                 _WaitHandler.Set();
@@ -65,6 +69,10 @@ namespace Lyl.Unity.Util.Collection
                         value = default(T);
                         safeClose = true;
                         return false;
+                    }
+                    else
+                    {
+                        _WaitHandler.WaitOne();
                     }
                 }
                 safeClose = true;

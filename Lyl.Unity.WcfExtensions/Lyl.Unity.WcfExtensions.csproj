@@ -53,8 +53,6 @@
     <Compile Include="Bindings\ExUdpBinding.cs" />
     <Compile Include="ChannelManagers\UdpChannelFactory.cs" />
     <Compile Include="ChannelManagers\UdpChannelListener.cs" />
-    <Compile Include="Channels\ExChannelBase.cs" />
-    <Compile Include="Channels\UdpBaseChannel.cs" />
     <Compile Include="Channels\UdpInputChannel.cs" />
     <Compile Include="Channels\UdpOutputChannel.cs" />
     <Compile Include="Channels\UdpScoket\ComSocket.cs" />

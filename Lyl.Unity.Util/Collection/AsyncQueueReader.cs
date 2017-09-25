@@ -78,7 +78,7 @@ namespace Lyl.Unity.Util.Collection
         public void Set(ExItem<T> item)
         {
             this._Item = item.Data;
-            if (_Timer!=null)
+            if (_Timer != null)
             {
                 _Timer.Change(-1, -1);
             }

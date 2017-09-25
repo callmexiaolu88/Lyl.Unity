@@ -187,11 +187,11 @@ namespace Lyl.Unity.Util.Collection
 
         internal bool RemoveReader(IQueueReader<T> reader)
         {
-            bool removed = false;
             lock (LockObject)
             {
                 if (_QueueState == QueueState.Open || _QueueState == QueueState.Shutdown)
                 {
+                    bool removed = false;
                     for (int i = _QueueReader.Count; i > 0; i--)
                     {
                         var tmp = _QueueReader.Dequeue();
@@ -204,9 +204,10 @@ namespace Lyl.Unity.Util.Collection
                             _QueueReader.Enqueue(tmp);
                         }
                     }
+                    return removed;
                 }
             }
-            return removed;
+            return false;
         }
 
         #endregion Internal Method
@@ -231,13 +232,13 @@ namespace Lyl.Unity.Util.Collection
                         return reader;
                     }
                 }
-                else if (_QueueState == QueueState.Open)
+                else if (_QueueState == QueueState.Shutdown)
                 {
                     if (_ItemQueue.HasAvailableItem)
                     {
                         item = _ItemQueue.DequeueAvailableItem();
                     }
-                    else
+                    else if (_ItemQueue.HasAnyItem)
                     {
                         AsyncQueueReader<T> reader = new AsyncQueueReader<T>(this, timeout, callback, state);
                         _QueueReader.Enqueue(reader);
@@ -339,7 +340,7 @@ namespace Lyl.Unity.Util.Collection
                         _QueueReader.Enqueue(reader);
                     }
                 }
-                else if (_QueueState == QueueState.Open)
+                else if (_QueueState == QueueState.Shutdown)
                 {
                     if (_ItemQueue.HasAvailableItem)
                     {
@@ -506,7 +507,7 @@ namespace Lyl.Unity.Util.Collection
 
             if (waiters!=null)
             {
-                completeWaiters(itemAvailable, waiters);
+                completeWaitersLater(itemAvailable, waiters);
             }
 
             if (reader!=null)
@@ -661,7 +662,7 @@ namespace Lyl.Unity.Util.Collection
                     }
                     if (dispose)
                     {
-                        while (_QueueReader.Count>0)
+                        while (_QueueReader.Count > 0)
                         {
                             var reader = _QueueReader.Dequeue();
                             reader.Set(default(ExItem<T>));

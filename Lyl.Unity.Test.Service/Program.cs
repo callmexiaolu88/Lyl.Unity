@@ -11,11 +11,16 @@ namespace Lyl.Unity.Test.Service
     {
         static void Main(string[] args)
         {
-            using (ServiceHost host = new ServiceHost(typeof(TestCommunication)))
-            {
-                host.Open();
-                Console.Read();
-            }
+            Console.Out.WriteLine("Testing Udp From Config.");
+
+            ServiceHost service = new ServiceHost(typeof(TestCommunication));
+            service.Open();
+
+            Console.WriteLine("Service is started from config...");
+            Console.WriteLine("Press <ENTER> to terminate the service and exit...");
+            Console.ReadLine();
+
+            service.Close();
         }
     }
 }

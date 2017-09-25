@@ -13,42 +13,49 @@ using System.Globalization;
 
 namespace Lyl.Unity.WcfExtensions.Channels
 {
-    sealed class UdpOutputChannel : UdpBaseChannel, IOutputChannel
+    sealed class UdpOutputChannel : ChannelBase, IOutputChannel
     {
 
         #region Private Filed
 
         private EndpointAddress _RemoteAddress = null;
         private Uri _Via = null;
-        private UdpChannelFactory _Factory;
-
-        private IPAddress _IPAddress = null;
         private IPEndPoint _RemoteEndPoint = null;
+        private Socket _Socket;
+
+        private BufferManager _BuffManager;
+        private MessageEncoder _MessageEncoder;
+        private UdpChannelFactory _Factory;
 
         #endregion Private Filed
 
         #region Constructor
 
         public UdpOutputChannel(UdpChannelFactory factory, EndpointAddress remoteAddress, Uri via,
-            BufferManager bufferManager, MessageEncoder encoder)
-            : base(factory, bufferManager, encoder)
+            BufferManager bufferManager, MessageEncoder messageEncoder)
+            : base(factory)
         {
             if (!string.Equals(via.Scheme, ExStringConstants.Scheme))
             {
                 throw new ArgumentException(via.Scheme, "via");
             }
 
+            this._BuffManager = bufferManager;
+            this._MessageEncoder = messageEncoder;
             this._Factory = factory;
             this._RemoteAddress = remoteAddress;
             this._Via = via;
 
-            _IPAddress = IPAddress.Parse(via.Host);
-            _RemoteEndPoint = new IPEndPoint(_IPAddress, via.Port);            
+            IPAddress remoteIP = IPAddress.Parse(via.Host);
+            this._RemoteEndPoint = new IPEndPoint(remoteIP, via.Port);
+
+            this._Socket = new Socket(this._RemoteEndPoint.AddressFamily,
+                SocketType.Dgram, ProtocolType.Udp);
         }
         
         #endregion 
 
-        #region IOutputChannel 成员
+        #region IOutputChannel Properties
 
         public EndpointAddress RemoteAddress
         {
@@ -59,6 +66,10 @@ namespace Lyl.Unity.WcfExtensions.Channels
         {
             get { return _Via; }
         }
+
+        #endregion IOutputChannel Properties
+
+        #region IOutputChannel Method
 
         public IAsyncResult BeginSend(Message message, TimeSpan timeout, AsyncCallback callback, object state)
         {
@@ -83,27 +94,128 @@ namespace Lyl.Unity.WcfExtensions.Channels
 
         public void Send(Message message)
         {
-            this.SendMessage(message, this._RemoteEndPoint);
+            this.sendMessage(message);
         }
 
-        #endregion IOutputChannel 成员
+        #endregion IOutputChannel Method
+
+        #region Public Base Class Method
+
+        public override T GetProperty<T>()
+        {
+            if (typeof(T) == typeof(IOutputChannel))
+            {
+                return (T)(object)this;
+            }
+
+            T messageEncoderProperty = this._MessageEncoder.GetProperty<T>();
+            if (messageEncoderProperty != null)
+            {
+                return messageEncoderProperty;
+            }
+
+            return base.GetProperty<T>();
+        }
+
+        #endregion Public Base Class Method
 
         #region Protect Base Class Method
 
-        protected override void OnOpen(TimeSpan timeout)
+        protected override void OnOpen(TimeSpan timeout) { }
+
+        protected override void OnAbort()
         {
-            this.connection();
+            if (this._Socket != null)
+            {
+                this._Socket.Close(0);
+            }
+        }
+
+        /// <summary>
+        /// 关闭Socket时的timeout不能使用太长时间，不然消息发送不出去，应该使用Close(0),当使用Close((int)timeout.TotalMilliseconds)时会阻塞调用线程
+        /// </summary>
+        /// <param name="timeout"></param>
+        protected override void OnClose(TimeSpan timeout)
+        {
+            if (this._Socket != null)
+            {
+                this._Socket.Close((int)timeout.TotalMilliseconds);
+            }
         }
 
         #endregion Protect Base Class Method
+        
+        #region Protect Base Class Async Method
+        
+        protected override IAsyncResult OnBeginOpen(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            return new CompletedAsyncResult(callback, state);
+        }
+
+        protected override void OnEndOpen(IAsyncResult result)
+        {
+            CompletedAsyncResult.End(result);
+        }
+
+        protected override IAsyncResult OnBeginClose(TimeSpan timeout, AsyncCallback callback, object state)
+        {
+            this.OnClose(timeout);
+            return new CompletedAsyncResult(callback, state);
+        }
+
+        protected override void OnEndClose(IAsyncResult result)
+        {
+            CompletedAsyncResult.End(result);
+        }
+
+        #endregion Protect Base Class Async Method
 
         #region Private Method
 
-        private void connection()
+        private ArraySegment<byte> encodeMessage(Message message)
         {
-            Socket socket = null;
-            socket = new Socket(_RemoteEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
-            base.InitializeScoket(socket);
+            try
+            {
+                this._RemoteAddress.ApplyTo(message);
+                return this._MessageEncoder.WriteMessage(message, ExDefaultValue.MaxBufferSize, this._BuffManager);
+            }
+            finally
+            {
+                message.Close();
+            }
+        }
+
+        private void sendMessage(Message message)
+        {
+            base.ThrowIfDisposedOrNotOpen();
+            ArraySegment<byte> encodeBytes = this.encodeMessage(message);
+            try
+            {
+                var bytesSent = this._Socket.SendTo(encodeBytes.Array, encodeBytes.Offset, encodeBytes.Count,
+                    SocketFlags.None, this._RemoteEndPoint);
+                if (bytesSent != encodeBytes.Count)
+                {
+                    throw new CommunicationException(string.Format(CultureInfo.CurrentCulture,
+                        "A Udp error occurred sending a message to {0}.", _RemoteEndPoint));
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                this._BuffManager.ReturnBuffer(encodeBytes.Array);
+            }
+        }
+
+        private void clearupBuffer(byte[] buffer)
+        {
+            if (buffer != null)
+            {
+                this._BuffManager.ReturnBuffer(buffer);
+            }
+
         }
 
         #endregion Private Method
@@ -126,9 +238,20 @@ namespace Lyl.Unity.WcfExtensions.Channels
                 : base(callback, state)
             {
                 this._Channel = channel;
+                this._MessageBuff = channel.encodeMessage(message);
                 try
                 {
-                    var result = channel.BeginSendMessage(message, out _MessageBuff, channel._RemoteEndPoint, onSendCallback, this);
+                    IAsyncResult result = null;
+                    try
+                    {
+                        result = channel._Socket.BeginSendTo(_MessageBuff.Array, _MessageBuff.Offset, _MessageBuff.Count,
+                            SocketFlags.None, channel._RemoteEndPoint, callback, state);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        throw ex;
+                    }
+                
                     if (result.CompletedSynchronously)
                     {
                         completeSend(result, true);
@@ -175,7 +298,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
             {
                 try
                 {
-                    int bytesSent = _Channel.EndSendMessage(result);
+                    int bytesSent = _Channel._Socket.EndSendTo(result);
                     if (bytesSent!=_MessageBuff.Count)
                     {
                         throw new CommunicationException(string.Format(CultureInfo.CurrentCulture,
@@ -197,7 +320,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
             {
                 if (_MessageBuff.Array != null)
                 {
-                    _Channel.ClearupBuffer(_MessageBuff.Array);
+                    _Channel.clearupBuffer(_MessageBuff.Array);
                     _MessageBuff = new ArraySegment<byte>();
                 }
             }

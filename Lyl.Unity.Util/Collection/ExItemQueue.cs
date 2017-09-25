@@ -114,7 +114,9 @@ namespace Lyl.Unity.Util.Collection
         #region Public Property
 
         public bool HasAvailableItem
-        { get { return _TotalCount > _PendingCount; } }
+        {
+            get { return _TotalCount > _PendingCount; }
+        }
 
         public bool HasAnyItem
         {

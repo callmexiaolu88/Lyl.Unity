@@ -8,6 +8,7 @@ using Lyl.Unity.WcfExtensions.BindingElements;
 using System.Configuration;
 using System.ServiceModel.Configuration;
 using Lyl.Unity.WcfExtensions.BindingConfigurationElements;
+using System.ServiceModel;
 
 namespace Lyl.Unity.WcfExtensions.Bindings
 {
@@ -90,8 +91,8 @@ namespace Lyl.Unity.WcfExtensions.Bindings
 
         private void initialize()
         {
-            _CompositeDuplexBindingElement = new CompositeDuplexBindingElement();
             _ReliableSessionBindingElement = new ReliableSessionBindingElement();
+            _CompositeDuplexBindingElement = new CompositeDuplexBindingElement();            
             _EncodingBindingElement = new TextMessageEncodingBindingElement();
             _OneWayEncodingBindingElement = new OneWayEncoderBindingElement();
             _TransportBindingElement = new ExUdpBindingElement();
@@ -142,7 +143,7 @@ namespace Lyl.Unity.WcfExtensions.Bindings
                 bindingElements.Add(_EncodingBindingElement);
             }
             bindingElements.Add(_TransportBindingElement);
-            return bindingElements;
+            return bindingElements.Clone();
         }
 
         public override string Scheme
