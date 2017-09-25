@@ -139,7 +139,7 @@ namespace Lyl.Unity.WcfExtensions.Channels
         {
             if (this._Socket != null)
             {
-                this._Socket.Close((int)timeout.TotalMilliseconds);
+                this._Socket.Close();
             }
         }
 
